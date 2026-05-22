@@ -1,7 +1,25 @@
+# Local JSON database storage
+aiops_logs.json
+
+# Python bytecode caches
 # Byte-compiled / optimized / DLL files
+*.py[cod]
+.pytest_cache/
 __pycache__/
 *.py[codz]
 *$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# System specific files
+.DS_Store
+Thumbs.db
+
+
+
 
 # C extensions
 *.so
