@@ -12,7 +12,7 @@ st.sidebar.markdown("### Dashboard Engine Settings")
 st_refresh = st.sidebar.slider("Refresh Frame Interval (s)", 1, 10, 3)
 st.fragment(run_every=st_refresh)
 
-LOG_FILE = "../aiops_logs.json"
+LOG_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "aiops_logs.json"))
 
 def load_local_logs():
     if not os.path.exists(LOG_FILE):
@@ -26,7 +26,7 @@ def load_local_logs():
                     "trace_id": item.get("trace_id"),
                     "agent_name": item.get("agent_name"),
                     "status": item.get("status"),
-                    "timestamp": datetime.fromtimestamp(item.get("timestamp", time.time())),
+                    "timestamp": datetime.fromtimestamp(item.get("timestamp", datetime.now().timestamp())),
                     "latency": item.get("latency_seconds", 0.0),
                     "total_tokens": item.get("metrics", {}).get("total_tokens", 0),
                     "error_type": item.get("error", {}).get("type", "None") if item.get("error") else "None"

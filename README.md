@@ -18,3 +18,26 @@ Traditional observability tools treat LLM applications like single-turn API endp
 ## Architecture Overview
 
 The system runs a split-plane architecture locally on your machine to ensure high throughput:
+
+## Development — Setup
+
+Use the included `setup_env.sh` to create and activate a Python virtual environment and install dependencies.
+
+Run these commands in your VS Code Bash terminal from the repository root:
+
+```bash
+# make the script executable (optional)
+chmod +x setup_env.sh
+
+# recommended: source the script so the venv remains active in your shell
+source setup_env.sh
+
+# or run non-interactively (creates venv and installs packages, but activation won't persist)
+./setup_env.sh
+```
+
+Notes:
+- The script dynamically locates the repository root, prefers `.venv` but will create one if missing.
+- It attempts to source the activation script using a forward-slash path (`.venv/Scripts/activate`) for Windows Git Bash compatibility, and falls back to Unix-style `bin/activate` when appropriate.
+- If `requirements.txt` exists, packages will be upgraded/installed automatically.
+

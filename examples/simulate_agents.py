@@ -5,7 +5,9 @@ import time
 
 # Append root src layer to local scope execution parameters
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
+# Assuming your class is in a file named client.py or similar inside the src directory
 from open_aiops import AIOpsClient, track_agent
+# (Adjust 'client' to match whatever the actual filename is where AIOpsClient lives)
 
 client = AIOpsClient(api_key="local_sandbox_dev_token")
 
