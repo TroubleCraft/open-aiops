@@ -14,25 +14,21 @@ st.fragment(run_every=st_refresh)
 
 LOG_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "aiops_logs.json"))
 
+# Streamlit will read this securely from your cloud secrets configuration panel!
+DB_URL = st.secrets.get("DB_URL", "your_copied_supabase_uri_here")
+
 def load_local_logs():
-    if not os.path.exists(LOG_FILE):
-        return pd.DataFrame()
     try:
-        with open(LOG_FILE, "r") as f:
-            data = json.load(f)
-            rows = []
-            for item in data:
-                rows.append({
-                    "trace_id": item.get("trace_id"),
-                    "agent_name": item.get("agent_name"),
-                    "status": item.get("status"),
-                    "timestamp": datetime.fromtimestamp(item.get("timestamp", datetime.now().timestamp())),
-                    "latency": item.get("latency_seconds", 0.0),
-                    "total_tokens": item.get("metrics", {}).get("total_tokens", 0),
-                    "error_type": item.get("error", {}).get("type", "None") if item.get("error") else "None"
-                })
-            return pd.DataFrame(rows)
-    except Exception:
+        conn = psycopg2.connect(DB_URL)
+        query = "SELECT * FROM telemetry_logs ORDER BY timestamp DESC LIMIT 500"
+        df = pd.read_sql_query(query, conn)
+        conn.close()
+        
+        if not df.empty:
+            df['timestamp'] = df['timestamp'].apply(lambda x: datetime.fromtimestamp(x))
+        return df
+    except Exception as e:
+        st.error(f"Database sync error: {e}")
         return pd.DataFrame()
 
 df = load_local_logs()

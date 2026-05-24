@@ -3,6 +3,8 @@ import os
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+DB_URL = "postgresql://postgres:wHBB7+&gKBSAQMj@db.yjlwxzqkjjwfyfjgblkp.supabase.co:5432/postgres"
+
 app = FastAPI(title="AIOps Core Ingestion Service")
 
 app.add_middleware(
@@ -37,22 +39,37 @@ async def receive_telemetry(request: Request):
     data = await request.json()
     print(data)
     
+    metrics = data.get("metrics", {})
+    error_obj = data.get("error") or {}
+    
     try:
-        with open(LOG_FILE, "r") as f:
-            existing_data = json.load(f)
-            if not isinstance(existing_data, list):
-                existing_data = []
-    except (FileNotFoundError, json.JSONDecodeError):
-        existing_data = []
+        # Establish connection to Supabase
+        conn = psycopg2.connect(DB_URL)
+        cursor = conn.cursor()
+        
+        insert_query = """
+        INSERT INTO telemetry_logs (trace_id, agent_name, status, timestamp, latency_seconds, total_tokens, error_type)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        
+        cursor.execute(insert_query, (
+            data.get("trace_id"),
+            data.get("agent_name"),
+            data.get("status"),
+            data.get("timestamp"),
+            data.get("latency_seconds", 0.0),
+            metrics.get("total_tokens", 0),
+            error_obj.get("type", "None") if error_obj else "None"
+        ))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+    except Exception as e:
+        print(f"❌ Database insertion failed: {e}")
+        return {"status": "error", "message": str(e)}
 
-    # 1. Add the new packet to the array
-    existing_data.append(data)
-
-    # 2. Save the array to disk (aligned with the try statement)
-    with open(LOG_FILE, "w") as f:
-        json.dump(existing_data, f, indent=4)
-
-    # 3. Final return at the absolute end
     return {"status": "success"}
 
 if __name__ == "__main__":
